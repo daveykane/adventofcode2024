@@ -6,7 +6,7 @@ const { assertEquals } = Rhum.asserts;
 
 Rhum.testPlan("Advent of Code - Day One", () => {
   Rhum.testSuite("Part One", () => {
-    Rhum.testCase("should get 1", async () => {
+    Rhum.testCase("should get 11", async () => {
       assertEquals(part1((await getInput("day1", "input-example")).split("\n")), 11);
     });
     Rhum.testCase("should get 2904518", async () => {
