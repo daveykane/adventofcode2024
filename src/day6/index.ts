@@ -13,8 +13,7 @@ class Patrol {
   start: number[] = [];
   stuck = false;
 
-  visited = new Set<string>();
-  visitedByDirection = new Set<string>();
+  visited = new Map<string, number[]>();
 
   constructor(grid: string[]) {
     this.cells = grid.map((row, y) =>
@@ -34,24 +33,23 @@ class Patrol {
     this.currentDirection = 0;
     this.stuck = false;
     this.visited.clear();
-    this.visitedByDirection.clear();
   }
 
   walk() {
     while (true) {
       const guard = this.guard.join(",");
-      const visitedByDirection = `${guard},${this.currentDirection}`;
       const newX = this.guard[0] + this.directions[this.currentDirection][0];
       const newY = this.guard[1] + this.directions[this.currentDirection][1];
       const newCell = this.cells[newY]?.[newX];
 
-      if (this.visitedByDirection.has(visitedByDirection)) {
+      if (this.visited.get(guard)?.includes(this.currentDirection)) {
         this.stuck = true;
         break;
       }
 
-      this.visited.add(guard);
-      this.visitedByDirection.add(visitedByDirection);
+      const pastGuard = this.visited.get(guard) ?? [];
+      pastGuard.push(this.currentDirection);
+      this.visited.set(guard, pastGuard);
 
       if (!newCell) {
         break;
@@ -75,14 +73,23 @@ export const part2 = (map: string[]) => {
   const patrol = new Patrol(map);
   patrol.walk();
 
-  const visited = [...patrol.visited];
-  const visitedByDirection = [...patrol.visitedByDirection];
-  visited.shift();
+  let index = 0;
+  const entries = [...patrol.visited.entries()];
 
-  for (const cell of visited) {
-    // const blockPatrol = new Patrol(map);
-    const [x, y] = cell.split(",").map(Number);
-    const [px, py, direction] = (visitedByDirection.shift() ?? "").split(",").map(Number);
+  for (const [position] of entries) {
+    if (index === 0) {
+      index++;
+      continue;
+    }
+
+    const [x, y] = position.split(",").map(Number);
+    const [pPosition, pDirections] = entries[index - 1];
+    const [px, py] = pPosition.split(",").map(Number);
+    const direction = pDirections.shift();
+
+    if (direction === undefined) {
+      throw new Error("Direction not found somehow");
+    }
 
     patrol.reset();
     patrol.cells[y][x] = "#";
@@ -92,6 +99,7 @@ export const part2 = (map: string[]) => {
     patrol.cells[y][x] = ".";
 
     if (patrol.stuck) stuckPatrolCount++;
+    index++;
   }
 
   return stuckPatrolCount;
