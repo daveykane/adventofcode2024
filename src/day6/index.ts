@@ -32,7 +32,7 @@ class Patrol {
   walk() {
     while (true) {
       const guard = this.guard.join(",");
-      const visitedByDirection = `${guard}${this.currentDirection}`;
+      const visitedByDirection = `${guard},${this.currentDirection}`;
       const newX = this.guard[0] + this.directions[this.currentDirection][0];
       const newY = this.guard[1] + this.directions[this.currentDirection][1];
       const newCell = this.cells[newY]?.[newX];
@@ -67,12 +67,20 @@ export const part2 = (map: string[]) => {
   const patrol = new Patrol(map);
   patrol.walk();
 
-  for (const cell of patrol.visited) {
+  const visited = [...patrol.visited];
+  const visitedByDirection = [...patrol.visitedByDirection];
+  visited.shift();
+
+  for (const cell of visited) {
     const blockPatrol = new Patrol(map);
     const [x, y] = cell.split(",").map(Number);
+    const [px, py, direction] = (visitedByDirection.shift() ?? "").split(",").map(Number);
 
     blockPatrol.cells[y][x] = "#";
+    blockPatrol.guard = [px, py];
+    blockPatrol.currentDirection = direction;
     blockPatrol.walk();
+
     if (blockPatrol.stuck) stuckPatrolCount++;
   }
 
