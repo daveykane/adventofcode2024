@@ -29,6 +29,14 @@ class Patrol {
     );
   }
 
+  reset() {
+    this.guard = this.start;
+    this.currentDirection = 0;
+    this.stuck = false;
+    this.visited.clear();
+    this.visitedByDirection.clear();
+  }
+
   walk() {
     while (true) {
       const guard = this.guard.join(",");
@@ -72,16 +80,18 @@ export const part2 = (map: string[]) => {
   visited.shift();
 
   for (const cell of visited) {
-    const blockPatrol = new Patrol(map);
+    // const blockPatrol = new Patrol(map);
     const [x, y] = cell.split(",").map(Number);
     const [px, py, direction] = (visitedByDirection.shift() ?? "").split(",").map(Number);
 
-    blockPatrol.cells[y][x] = "#";
-    blockPatrol.guard = [px, py];
-    blockPatrol.currentDirection = direction;
-    blockPatrol.walk();
+    patrol.reset();
+    patrol.cells[y][x] = "#";
+    patrol.guard = [px, py];
+    patrol.currentDirection = direction;
+    patrol.walk();
+    patrol.cells[y][x] = ".";
 
-    if (blockPatrol.stuck) stuckPatrolCount++;
+    if (patrol.stuck) stuckPatrolCount++;
   }
 
   return stuckPatrolCount;
