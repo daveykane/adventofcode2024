@@ -1,106 +1,114 @@
-class Patrol {
-  cells: string[][] = [];
-
-  currentDirection = 0;
-  directions = [
+const Patrol = {
+  map: [[]] as number[][],
+  mapTemplate: [[]] as number[][],
+  start: [] as number[],
+  guard: [] as number[],
+  width: 0,
+  height: 0,
+  stuck: 0,
+  directions: [
     [0, -1],
     [1, 0],
     [0, 1],
     [-1, 0],
-  ];
+  ],
 
-  guard: number[] = [];
-  start: number[] = [];
-  stuck = false;
+  isInMap(x: number, y: number) {
+    return x >= 0 && x < this.width && y >= 0 && y < this.height;
+  },
 
-  visited = new Map<string, number[]>();
-
-  constructor(grid: string[]) {
-    this.cells = grid.map((row, y) =>
+  parseInput(input: string[]) {
+    this.height = input.length;
+    this.width = input[0].length;
+    this.mapTemplate = input.map((row, y) =>
       row.split("").map((cell, x) => {
         if (cell === "^") {
-          this.start = [x, y];
-          this.guard = [x, y];
+          this.start = [x, y, 0];
+          this.guard = [x, y, 0];
         }
 
-        return cell;
+        return cell === "#" ? -1 : 0;
       })
     );
-  }
+  },
 
-  reset() {
-    this.guard = this.start;
-    this.currentDirection = 0;
-    this.stuck = false;
-    this.visited.clear();
-  }
+  cloneMap(map: number[][]) {
+    return map.map((row) => row.slice());
+  },
 
-  walk() {
-    while (true) {
-      const guard = this.guard.join(",");
-      const newX = this.guard[0] + this.directions[this.currentDirection][0];
-      const newY = this.guard[1] + this.directions[this.currentDirection][1];
-      const newCell = this.cells[newY]?.[newX];
+  walk(obstacle?: [number, number]) {
+    // Reset map and set guard position
+    this.map = this.cloneMap(this.mapTemplate);
+    this.map[this.start[1]][this.start[0]] = this.start[2] + 1;
+    this.guard = [...this.start];
 
-      if (this.visited.get(guard)?.includes(this.currentDirection)) {
-        this.stuck = true;
-        break;
-      }
-
-      const pastGuard = this.visited.get(guard) ?? [];
-      pastGuard.push(this.currentDirection);
-      this.visited.set(guard, pastGuard);
-
-      if (!newCell) {
-        break;
-      } else if (newCell === "#") {
-        this.currentDirection = (this.currentDirection + 1) % 4;
-      } else {
-        this.guard = [newX, newY];
-      }
+    // Add obstacle
+    if (obstacle) {
+      this.map[obstacle[1]][obstacle[0]] = -1;
     }
-  }
-}
 
-export const part1 = (map: string[]) => {
-  const patrol = new Patrol(map);
-  patrol.walk();
-  return patrol.visited.size;
+    while (true) {
+      const nx = this.guard[0] + this.directions[this.guard[2]][0];
+      const ny = this.guard[1] + this.directions[this.guard[2]][1];
+
+      // Escaped map
+      if (!this.isInMap(nx, ny)) break;
+
+      // Hit obstacle so rotate
+      if (this.map[ny][nx] === -1) {
+        this.guard[2] = (this.guard[2] + 1) % 4;
+        continue;
+      }
+
+      // Move Guard
+      this.guard = [nx, ny, this.guard[2]];
+
+      // Guard at new position
+      if (this.map[this.guard[1]][this.guard[0]] === 0) {
+        this.map[this.guard[1]][this.guard[0]] = this.guard[2] + 1;
+        continue;
+      }
+
+      // Guard stuck
+      if (`${this.map[this.guard[1]][this.guard[0]]}`.includes(`${this.guard[2] + 1}`)) {
+        this.stuck++;
+        break;
+      }
+
+      // Track Guard
+      this.map[this.guard[1]][this.guard[0]] = +`${this.map[this.guard[1]][this.guard[0]]}${this.guard[2] + 1}`;
+    }
+  },
 };
 
-export const part2 = (map: string[]) => {
-  let stuckPatrolCount = 0;
-  const patrol = new Patrol(map);
-  patrol.walk();
+export const part1 = (input: string[]) => {
+  Patrol.parseInput(input);
+  Patrol.walk();
+  return Patrol.map.flat().filter((cell) => cell > 0).length;
+};
 
-  let index = 0;
-  const entries = [...patrol.visited.entries()];
+export const part2 = (input: string[]) => {
+  Patrol.parseInput(input);
+  Patrol.walk();
 
-  for (const [position] of entries) {
-    if (index === 0) {
-      index++;
-      continue;
+  const walkedMap = Patrol.cloneMap(Patrol.map);
+  Patrol.stuck = 0;
+
+  for (let y = 0; y < walkedMap.length; y++) {
+    for (let x = 0; x < walkedMap[y].length; x++) {
+      if (walkedMap[y][x] <= 0) continue;
+
+      const [direction, ...rest] = `${walkedMap[y][x]}`;
+      const oppositeDirection = (+direction - 1 + 2) % 4;
+      const px = x + Patrol.directions[oppositeDirection][0];
+      const py = y + Patrol.directions[oppositeDirection][1];
+
+      // Start guard at previous position and walk with new obstacle
+      Patrol.start = [px, py, +direction - 1];
+      Patrol.walk([x, y]);
+      walkedMap[y][x] = +rest.join("");
     }
-
-    const [x, y] = position.split(",").map(Number);
-    const [pPosition, pDirections] = entries[index - 1];
-    const [px, py] = pPosition.split(",").map(Number);
-    const direction = pDirections.shift();
-
-    if (direction === undefined) {
-      throw new Error("Direction not found somehow");
-    }
-
-    patrol.reset();
-    patrol.cells[y][x] = "#";
-    patrol.guard = [px, py];
-    patrol.currentDirection = direction;
-    patrol.walk();
-    patrol.cells[y][x] = ".";
-
-    if (patrol.stuck) stuckPatrolCount++;
-    index++;
   }
 
-  return stuckPatrolCount;
+  return Patrol.stuck;
 };
