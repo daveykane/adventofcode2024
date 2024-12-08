@@ -1,15 +1,22 @@
-const isSolvable = (result: number, value: number, [next, ...remaining]: number[], useConcat = false): boolean => {
-  if (next === undefined || value > result) return result === value;
-  const add = isSolvable(result, value + next, remaining, useConcat);
-  const multiply = isSolvable(result, value * next, remaining, useConcat);
-  const concat = useConcat && isSolvable(result, Number(`${value}${next}`), remaining, useConcat);
-  return add || multiply || concat;
+const isSolvable = (result: number, numbers: number[], useConcat = false): boolean => {
+  if (numbers.length === 0 && result === 0) return true;
+  if (result === 0 || !Number.isInteger(result)) return false;
+
+  const [last, nextNumbers] = [numbers[numbers.length - 1], numbers.slice(0, -1)];
+
+  return (
+    isSolvable(result - last, nextNumbers, useConcat) ||
+    isSolvable(result / last, nextNumbers, useConcat) ||
+    (useConcat &&
+      `${result}`.endsWith(`${last}`) &&
+      isSolvable(+`${result}`.replace(new RegExp(`${last}$`), ""), nextNumbers, useConcat))
+  );
 };
 
 const sumValidEquations = (equations: string[], useConcat = false) =>
   equations.reduce((sum, equation) => {
-    const [result, next, ...remaining] = equation.split(/:? /).map(Number);
-    return sum + (isSolvable(result, next, remaining, useConcat) ? result : 0);
+    const [result, ...numbers] = equation.split(/:? /).map(Number);
+    return sum + (isSolvable(result, numbers, useConcat) ? result : 0);
   }, 0);
 
 export const part1 = (equations: string[]) => sumValidEquations(equations);
