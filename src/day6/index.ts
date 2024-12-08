@@ -63,19 +63,19 @@ const Patrol = {
       // Move Guard
       this.guard = [nx, ny, this.guard[2]];
 
-      // Guard at new position
+      // Guard at new position never visited before
       if (this.map[this.guard[1]][this.guard[0]] === 0) {
         this.map[this.guard[1]][this.guard[0]] = this.guard[2] + 1;
         continue;
       }
 
-      // Guard stuck
+      // Guard stuck because visited before in the same direction
       if (`${this.map[this.guard[1]][this.guard[0]]}`.includes(`${this.guard[2] + 1}`)) {
         this.stuck++;
         break;
       }
 
-      // Track Guard
+      // Track Guard at position in new direction
       this.map[this.guard[1]][this.guard[0]] = +`${this.map[this.guard[1]][this.guard[0]]}${this.guard[2] + 1}`;
     }
   },
