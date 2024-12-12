@@ -3,7 +3,11 @@ export const getInput = async (day: string, file = "input", trim = true): Promis
   return trim ? text.trim() : text;
 };
 
-export const getGrid = (input: string) => input.split("\n").map((row) => row.split("").map(Number));
+export const getGrid = <T>(input: string, mapFunc?: (cell: string) => T): T[][] =>
+  input.split("\n").map((row) => {
+    const rowSplit = row.split("");
+    return (mapFunc ? rowSplit.map(mapFunc) : rowSplit) as T[];
+  });
 
 export const isInGrid = ([x, y]: number[], width: number, height: number) =>
   x >= 0 && y >= 0 && x < width && y < height;

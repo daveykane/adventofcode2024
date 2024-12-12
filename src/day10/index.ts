@@ -23,5 +23,5 @@ const getTrailheadScores = (grid: number[][], distinct = false) =>
     }, score);
   }, 0);
 
-export const part1 = (input: string) => getTrailheadScores(getGrid(input));
-export const part2 = (input: string) => getTrailheadScores(getGrid(input), true);
+export const part1 = (input: string) => getTrailheadScores(getGrid<number>(input, Number));
+export const part2 = (input: string) => getTrailheadScores(getGrid<number>(input, Number), true);
