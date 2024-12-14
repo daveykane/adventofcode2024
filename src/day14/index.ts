@@ -7,24 +7,17 @@ const getRobots = (input: string[]) => {
   });
 };
 
-const passTime = (
-  robots: Robot[],
-  seconds: number,
-  [WIDTH, HEIGHT]: [number, number],
-  cb?: (robotsByRow: Map<number, number[]>) => boolean
-) => {
+const passTime = (robots: Robot[], seconds: number, [WIDTH, HEIGHT]: [number, number]) => {
   for (let i = 0; i < seconds; i++) {
-    const robotsByRow: Map<number, number[]> = new Map();
-
+    const distinctRobots = new Set<string>();
     robots.forEach((robot) => {
       const px = robot.px + robot.vx;
       const py = robot.py + robot.vy;
       robot.px = px >= WIDTH ? px - WIDTH : px < 0 ? px + WIDTH : px;
       robot.py = py >= HEIGHT ? py - HEIGHT : py < 0 ? py + HEIGHT : py;
-      robotsByRow.set(robot.py, (robotsByRow.get(robot.py) ?? []).concat([robot.px]));
+      distinctRobots.add(`${robot.px},${robot.py}`);
     });
-
-    if (cb && cb(robotsByRow)) return i + 1;
+    if (distinctRobots.size === robots.length && i > 100) return i + 1;
   }
 };
 
@@ -50,26 +43,5 @@ export const part1 = (input: string[], [WIDTH, HEIGHT]: [number, number]) => {
   return quadrantCount.reduce((safetyFactor, count) => safetyFactor * count, 1);
 };
 
-export const part2 = (input: string[], [WIDTH, HEIGHT]: [number, number]) => {
-  const robots = getRobots(input);
-
-  return passTime(robots, 7100, [WIDTH, HEIGHT], (robotsByRow: Map<number, number[]>) => {
-    const rowsWith31Robots = [...robotsByRow.values()].filter((row) => row.length >= 31);
-
-    // Find top and bottom border of tree
-    let sequentialCount = 0;
-
-    rowsWith31Robots.forEach((row) => {
-      const xSorted = row.sort();
-      const maxSequential = xSorted.reduce((max, current, index) => {
-        if (index === 0) return 1;
-        if (current - xSorted[index - 1] === 1) return max + 1;
-        return max;
-      }, 1);
-
-      if (maxSequential === 31) sequentialCount++;
-    });
-
-    return sequentialCount === 2;
-  });
-};
+export const part2 = (input: string[], [WIDTH, HEIGHT]: [number, number]) =>
+  passTime(getRobots(input), Infinity, [WIDTH, HEIGHT]);
