@@ -76,22 +76,38 @@ const canMove = (map: string[][], [nx, ny]: number[], [dx, dy]: number[], change
   return false;
 };
 
-const walkPath = (input: string[], boxChar: string, expand = false) => {
+const walkPath = (input: string[], boxChar: string, animate: boolean, expand = false) => {
   const changes: Change[] = [];
   const { map, path, robot } = parseInput(input, expand);
 
-  path.forEach((direction) => move(map, directions[direction], robot, changes, expand));
+  if (animate) {
+    let moveCount = 0;
+    const printMap = () => {
+      console.clear();
+      console.log(map.map((row) => row.join("")).join("\n"));
+      console.log("move:", moveCount);
+    };
 
-  let res = 0;
+    printMap();
+    const interval = setInterval(function () {
+      const direction = path.shift() as keyof typeof directions;
+      move(map, directions[direction], robot, changes, expand);
+      moveCount++;
+      printMap();
+      if (path.length === 0) clearInterval(interval);
+    }, 100);
+  } else {
+    path.forEach((direction) => move(map, directions[direction], robot, changes, expand));
 
-  for (let r = 0; r < map.length; r++) {
-    for (let c = 0; c < map[r].length; c++) {
-      if (map[r][c] === boxChar) res += r * 100 + c;
+    let res = 0;
+    for (let r = 0; r < map.length; r++) {
+      for (let c = 0; c < map[r].length; c++) {
+        if (map[r][c] === boxChar) res += r * 100 + c;
+      }
     }
+    return res;
   }
-
-  return res;
 };
 
-export const part1 = (input: string[]) => walkPath(input, "O");
-export const part2 = (input: string[]) => walkPath(input, "[", true);
+export const part1 = (input: string[], animate = false) => walkPath(input, "O", animate);
+export const part2 = (input: string[], animate = false) => walkPath(input, "[", animate, true);
