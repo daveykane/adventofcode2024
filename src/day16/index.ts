@@ -61,12 +61,15 @@ const solveMaze = (input: string) => {
       // Skip if the next position is a wall
       const [nx, ny] = [position[0] + dx, position[1] + dy];
       if (maze[ny][nx] == "#") return true;
+      // Find insert position
+      const newCost = cost + (index == direction ? 1 : 1001);
+      const insertIndex = stack.findIndex((item) => item.cost > newCost);
       // Add the path to the stack
-      stack.push({
+      stack.splice(insertIndex, 0, {
         path: [...path],
         position: [nx, ny],
         direction: index,
-        cost: cost + (index == direction ? 1 : 1001),
+        cost: newCost,
       });
     });
   }
