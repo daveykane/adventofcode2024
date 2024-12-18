@@ -7,11 +7,11 @@ const directions = [
   [-1, 0],
 ];
 
-const parseAndSimulate = (input: string, size: number, nanoseconds: number) => {
-  const bytes = input.split("\n").map((line) => line.split(",").map(Number));
+const getBytes = (input: string) => input.split("\n").map((line) => line.split(",").map(Number));
+const simulate = (bytes: number[][], size: number, slice: number) => {
   const memory = Array.from({ length: size }, () => Array(size).fill(0));
-  for (let i = 0; i < nanoseconds; i++) memory[bytes[i][1]][bytes[i][0]] = 1;
-  return { bytes, memory };
+  bytes.slice(0, slice).forEach(([x, y]) => (memory[y][x] = 1));
+  return memory;
 };
 
 const findExit = (memory: number[][], size: number) => {
@@ -39,14 +39,24 @@ const findExit = (memory: number[][], size: number) => {
 };
 
 export const part1 = (input: string, size: number, nanoseconds: number) => {
-  const { memory } = parseAndSimulate(input, size, nanoseconds);
+  const bytes = getBytes(input);
+  const memory = simulate(bytes, size, nanoseconds);
   return findExit(memory, size);
 };
 
 export const part2 = (input: string, size: number, nanoseconds: number) => {
-  const { bytes, memory } = parseAndSimulate(input, size, nanoseconds);
-  for (let i = nanoseconds; i < bytes.length; i++) {
-    memory[bytes[i][1]][bytes[i][0]] = 1;
-    if (findExit(memory, size) === -1) return bytes[i].join(",");
+  const bytes = getBytes(input);
+
+  let left = nanoseconds;
+  let right = bytes.length;
+
+  while (left < right - 1) {
+    const mid = Math.floor((left + right) / 2);
+    const memory = simulate(bytes, size, mid);
+    const foundExit = findExit(memory, size) !== -1;
+    left = foundExit ? mid : left;
+    right = foundExit ? right : mid;
   }
+
+  return bytes[left].join(",");
 };
