@@ -16,10 +16,10 @@ Rhum.testPlan("Advent of Code - Day Eighteen", () => {
 
   Rhum.testSuite("Part Two", () => {
     Rhum.testCase("should get 6,1", async () => {
-      assertEquals(part2(await getInput("day18", "input-example"), 7, 12), "6,1");
+      assertEquals(part2(await getInput("day18", "input-example"), 7), "6,1");
     });
     Rhum.testCase("should get 32,55", async () => {
-      assertEquals(part2(await getInput("day18", "input"), 71, 1024), "32,55");
+      assertEquals(part2(await getInput("day18", "input"), 71), "32,55");
     });
   });
 });

@@ -44,10 +44,10 @@ export const part1 = (input: string, size: number, nanoseconds: number) => {
   return findExit(memory, size);
 };
 
-export const part2 = (input: string, size: number, nanoseconds: number) => {
+export const part2 = (input: string, size: number) => {
   const bytes = getBytes(input);
 
-  let left = nanoseconds;
+  let left = 0;
   let right = bytes.length;
 
   while (left < right - 1) {
