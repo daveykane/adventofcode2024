@@ -50,20 +50,24 @@ class Computer {
   getProgram() {
     return this.program;
   }
+
+  reset(registerA: bigint) {
+    this.pointer = 0;
+    this.output = [];
+    this.registers = { A: registerA, B: 0n, C: 0n };
+  }
 }
 
 export const part1 = (input: string) => new Computer(input).run();
 export const part2 = (input: string) => {
   let i = 1n;
-  let computer = new Computer(input);
+  const computer = new Computer(input);
   const expected = computer.getProgram().join(",");
 
   while (true) {
-    computer = new Computer(input, i);
-
+    computer.reset(i);
     const result = computer.run();
     if (result === expected) return i;
-
     i = expected.endsWith(result) ? i * 8n : i + 1n;
   }
 };
